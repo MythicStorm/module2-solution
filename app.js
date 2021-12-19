@@ -9,19 +9,26 @@
     ToBuyController.$inject = ['ShoppingListCheckOffService'];
     function ToBuyController(ShoppingListCheckOffService) {
         var buyController = this;
+        buyController.buyListEmpty = false;
+        var minItems = 0;
         
         buyController.shoppingList = ShoppingListCheckOffService.getShoppingList();
         
         buyController.removeShoppingListItem = function(itemIndex) {
-            ShoppingListCheckOffService.removeShoppingListItem(itemIndex);
+            buyController.buyListEmpty =  ShoppingListCheckOffService.removeShoppingListItem(itemIndex, minItems);
         };
     }
 
     AlreadyBoughtController.$inject = ['ShoppingListCheckOffService'];
     function AlreadyBoughtController(ShoppingListCheckOffService) {
         var boughtController = this;
+        var minItems = 0;
 
-        boughtController.shoppingList = ShoppingListCheckOffService.getBoughtShoppingList();
+        boughtController.shoppingList = ShoppingListCheckOffService.getBoughtShoppingList(minItems);
+        
+        boughtController.checkNoBoughtItemsMessageDisplayed = function(){
+            return ShoppingListCheckOffService.checkBoughtListMinItems(minItems);
+        };    
     }
     
     function ShoppingListCheckOffService() {
@@ -61,11 +68,32 @@
             boughtShoppingList.push(ShoppingList);
         };
 
-        service.removeShoppingListItem = function(itemIndex) {
+        service.removeShoppingListItem = function(itemIndex, minItems) {
             service.addBoughtShoppingListItem(shoppingList[itemIndex].name, shoppingList[itemIndex].quantity)
             shoppingList.splice(itemIndex, 1);
+            return service.checkShoppingListMinItems(minItems);
         };
         
+        service.checkShoppingListMinItems = function(minItems) {
+            if (minItems === undefined ||
+                (minItems !== undefined && shoppingList.length > minItems)) {
+                return false;
+            } 
+            else {
+                return true;
+            }
+        };
+
+        service.checkBoughtListMinItems = function(minItems) {
+            if (minItems === undefined ||
+                (minItems !== undefined && boughtShoppingList.length > minItems)) {
+                return false;
+            } 
+            else {
+                return true;
+            }
+        };
+
         service.getShoppingList = function () {
             return shoppingList;
         };
